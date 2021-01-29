@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="user@192.168.90.82:22 password">
+    <serverData>
+      <paths name="user@192.168.90.82:22 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/user/xwh/monodepth2-master" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="vincent.xu@192.168.90.105:22 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/user/xwh/monodepth2-master" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+          <excludedPaths>
+            <excludedPath path="/home/user/xwh/monodepth2-master/kitti_data" />
+          </excludedPaths>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>

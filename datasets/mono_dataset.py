@@ -99,8 +99,8 @@ class MonoDataset(data.Dataset):
             if "color" in k:
                 n, im, i = k
                 for i in range(self.num_scales):
-                    # for nuscenes dataset, we crop the image where no lidar points can be seen
-                    inputs[(n, im, i - 1)] = inputs[(n, im, i - 1)].crop(0,240,1600,880)
+                    # # for nuscenes dataset, we crop the image where no lidar points can be seen
+                    # inputs[(n, im, i - 1)] = inputs[(n, im, i - 1)].crop(0,240,1600,880)
                     inputs[(n, im, i)] = self.resize[i](inputs[(n, im, i - 1)])
 
         for k in list(inputs):

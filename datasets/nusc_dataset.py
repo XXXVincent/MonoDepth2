@@ -266,7 +266,8 @@ class NuscDataset(data.Dataset):
         if do_flip:
             depth_gt = np.fliplr(depth_gt)
 
-        return depth_gt
+        return np.transpose(depth_gt, (1,0))
+        # return depth_gt
 
     def map_pointcloud_to_image(self,
                                 nusc,

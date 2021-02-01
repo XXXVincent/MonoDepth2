@@ -114,7 +114,7 @@ class Trainer:
         datasets_dict = {"kitti": datasets.KITTIRAWDataset,
                          "kitti_odom": datasets.KITTIOdomDataset,
                          "nusc_dataset": datasets.NuscDataset}
-        self.opt.dataset = "nusc_dataset"
+        # self.opt.dataset = "nusc_dataset"
         self.dataset = datasets_dict[self.opt.dataset]
 
         fpath = os.path.join(os.path.dirname(__file__), "splits", self.opt.split, "{}_files.txt")
@@ -504,8 +504,10 @@ class Trainer:
         so is only used to give an indication of validation performance
         """
         depth_pred = outputs[("depth", 0, 0)]
+        # depth_pred = torch.clamp(F.interpolate(
+        #     depth_pred, [1600, 640], mode="bilinear", align_corners=False), 1e-3, 80)
         depth_pred = torch.clamp(F.interpolate(
-            depth_pred, [1600, 640], mode="bilinear", align_corners=False), 1e-3, 80)
+            depth_pred, [640, 1600], mode="bilinear", align_corners=False), 1e-3, 80)
         depth_pred = depth_pred.detach()
 
         depth_gt = inputs["depth_gt"]
@@ -513,8 +515,9 @@ class Trainer:
 
         # garg/eigen crop
         crop_mask = torch.zeros_like(mask)
-        crop_mask[:, :, 153:371, 44:1197] = 1
-        mask = mask * crop_mask
+        # for nusc dataset, lidar depth map has already been cropped
+        # crop_mask[:, :, 153:371, 44:1197] = 1
+        # mask = mask * crop_mask
 
         depth_gt = depth_gt[mask]
         depth_pred = depth_pred[mask]

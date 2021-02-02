@@ -282,7 +282,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--batch_size",
                                  type=int,
                                  help="batch size",
-                                 default=2)
+                                 default=1)
         self.parser.add_argument("--learning_rate",
                                  type=float,
                                  help="learning rate",

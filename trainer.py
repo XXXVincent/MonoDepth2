@@ -247,16 +247,36 @@ class Trainer:
             outputs = self.models["depth"](features[0])
         else:
             # Otherwise, we only feed the image with frame_id 0 through the depth encoder
+            # print('*'*10,  '*'*10)
+            # print("Input color min-max rage", min(inputs["color_aug", 0, 0].cpu().numpy().flatten()), '-', max(inputs["color_aug", 0, 0].cpu().numpy().flatten()))
+            # print('*' * 10, '*' * 10)
             features = self.models["encoder"](inputs["color_aug", 0, 0])
+            # print('*'*10,  '*'*10)
+            # print("Features min-max rage", min(features[0].detach().cpu().numpy().flatten()), '-', max(features[0].detach().cpu().numpy().flatten()))
+            # print('*' * 10, '*' * 10)
             outputs = self.models["depth"](features)
+            # print('*'*10,  '*'*10)
+            # print("Depth min-max rage", min(outputs[('disp',0)].detach().cpu().numpy().flatten()), '-', max(outputs[('disp',0)].detach().cpu().numpy().flatten()))
+            # print('*' * 10, '*' * 10)
 
         if self.opt.predictive_mask:
             outputs["predictive_mask"] = self.models["predictive_mask"](features)
 
         if self.use_pose_net:
             outputs.update(self.predict_poses(inputs, features))
+        # print('*'*10,  '*'*10)
+        # print("axisangle min-max rage", min(outputs[("axisangle", 0, 1)].detach().cpu().numpy().flatten()), '-', max(outputs[("axisangle", 0, 1)].detach().cpu().numpy().flatten()))
+        # print("translation min-max rage", min(outputs[("translation", 0, 1)].detach().cpu().numpy().flatten()), '-', max(outputs[("translation", 0, 1)].detach().cpu().numpy().flatten()))
+        # print('*' * 10, '*' * 10)
+
 
         self.generate_images_pred(inputs, outputs)
+        # print('*'*10,  '*'*10)
+        # print("restored color 1", min(outputs[("color", 1, 0)].detach().cpu().numpy().flatten()), '-', max(outputs[("color", 1, 0)].detach().cpu().numpy().flatten()))
+        # print("restored color -1", min(outputs[("color", -1, 0)].detach().cpu().numpy().flatten()), '-', max(outputs[("color", -1, 0)].detach().cpu().numpy().flatten()))
+        # # print("orinigal color 0", min(outputs[("color", 0, 0)].detach().cpu().numpy().flatten()), '-', max(outputs[("color", 0, 0)].detach().cpu().numpy().flatten()))
+        # print('*' * 10, '*' * 10)
+
         losses = self.compute_losses(inputs, outputs)
 
         return outputs, losses
@@ -514,7 +534,7 @@ class Trainer:
         mask = depth_gt > 0
 
         # garg/eigen crop
-        crop_mask = torch.zeros_like(mask)
+        # crop_mask = torch.zeros_like(mask)
         # for nusc dataset, lidar depth map has already been cropped
         # crop_mask[:, :, 153:371, 44:1197] = 1
         # mask = mask * crop_mask

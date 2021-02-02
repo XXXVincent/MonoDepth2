@@ -177,6 +177,11 @@ class NuscDataset(data.Dataset):
                 raise NotImplementedError('nuscenes dataset does not support stereo depth')
             else:
                 inputs[("color", i, -1)] = self.get_color(sample, i, do_flip)
+            #
+            # for inp in inputs:
+            #     if 'color' in inp:
+            #         inputs[inp].save('/home/user/xwh/monodepth2-master/dataset_check/{}.png'.format(str(index)+'_'+str(i)))
+
 
         # adjusting intrinsics to match each scale in the pyramid
         SENSOR_DATA = self.nusc.get('sample_data', sample['data'][self.sensor])
@@ -187,13 +192,16 @@ class NuscDataset(data.Dataset):
 
         for scale in range(self.num_scales):
             # K = self.K.copy()
-
-            K[0, :] *= self.width // (2 ** scale)
-            K[1, :] *= self.height // (2 ** scale)
+            #  nusc camera instrinsic has not been normalized by orinigal image size
+            K[0, :] *= 1 // (2 ** scale)
+            K[1, :] *= 1 // (2 ** scale)
 
             inv_K = np.linalg.pinv(K)
 
             inputs[("K", scale)] = torch.from_numpy(K)
+            # print('-'*20)
+            # print('Nusc ("K", {}) : '.format(scale), K)
+            # print('-' * 20)
             inputs[("inv_K", scale)] = torch.from_numpy(inv_K)
 
         if do_color_aug:

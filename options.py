@@ -24,7 +24,7 @@ class MonodepthOptions:
         self.parser.add_argument("--log_dir",
                                  type=str,
                                  help="log directory",
-                                 default=os.path.join(os.path.expanduser("~"), "tmp"))
+                                 default='./exp/')
 
         # TRAINING options
         self.parser.add_argument("--model_name",
@@ -247,7 +247,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--height",
                                  type=int,
                                  help="input image height",
-                                 default=640)
+                                 default=896)
         self.parser.add_argument("--width",
                                  type=int,
                                  help="input image width",
@@ -335,7 +335,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--num_workers",
                                  type=int,
                                  help="number of dataloader workers",
-                                 default=4)
+                                 default=1)
 
         # LOADING options
         self.parser.add_argument("--load_weights_folder",

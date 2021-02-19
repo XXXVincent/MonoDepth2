@@ -364,8 +364,21 @@ class Trainer:
         """Generate the warped (reprojected) color images for a minibatch.
         Generated images are saved into the `outputs` dictionary.
         """
+        # for item in inputs:
+        #     print('-'*20)
+        #     print(item)
+        #     print(inputs[item].shape)
+        #     print('-' * 20)
+        #
+        # for item in outputs:
+        #     print('-'*20)
+        #     print(item)
+        #     print(outputs[item].shape)
+        #     print('-' * 20)
+
         for scale in self.opt.scales:
             disp = outputs[("disp", scale)]
+
             if self.opt.v1_multiscale:
                 source_scale = scale
             else:
@@ -411,10 +424,26 @@ class Trainer:
                 if not self.opt.disable_automasking:
                     outputs[("color_identity", frame_id, scale)] = \
                         inputs[("color", frame_id, source_scale)]
+            # for item in inputs:
+            #     print('-'*20)
+            #     print(item)
+            #     print(inputs[item].shape)
+            #     print('-' * 20)
+            #
+            # for item in outputs:
+            #     print('-'*20)
+            #     print(item)
+            #     print(outputs[item].shape)
+            #     print('-' * 20)
 
     def compute_reprojection_loss(self, pred, target):
         """Computes reprojection loss between a batch of predicted and target images
         """
+        # print('-' * 20)
+        # print(pred.shape)
+        # print(target.shape)
+        # print('-' * 20)
+
         abs_diff = torch.abs(target - pred)
         l1_loss = abs_diff.mean(1, True)
 
@@ -524,10 +553,16 @@ class Trainer:
         so is only used to give an indication of validation performance
         """
         depth_pred = outputs[("depth", 0, 0)]
-        # depth_pred = torch.clamp(F.interpolate(
-        #     depth_pred, [1600, 640], mode="bilinear", align_corners=False), 1e-3, 80)
         depth_pred = torch.clamp(F.interpolate(
-            depth_pred, [640, 1600], mode="bilinear", align_corners=False), 1e-3, 80)
+            depth_pred, [896, 1600], mode="bilinear", align_corners=False), 1e-3, 80)
+
+        # depth_pred = torch.clamp(F.interpolate(
+        #     depth_pred, [375,1242], mode="bilinear", align_corners=False), 1e-3, 80)
+        # garg/eigen crop
+        # crop_mask = torch.zeros_like(mask)
+        # # for nusc dataset, lidar depth map has already been cropped
+        # crop_mask[:, :, 153:371, 44:1197] = 1
+        # mask = mask * crop_mask
         depth_pred = depth_pred.detach()
 
         depth_gt = inputs["depth_gt"]
@@ -535,7 +570,7 @@ class Trainer:
 
         # garg/eigen crop
         # crop_mask = torch.zeros_like(mask)
-        # for nusc dataset, lidar depth map has already been cropped
+        # # for nusc dataset, lidar depth map has already been cropped
         # crop_mask[:, :, 153:371, 44:1197] = 1
         # mask = mask * crop_mask
 

@@ -247,11 +247,11 @@ class NuscdepthOptions:
         self.parser.add_argument("--height",
                                  type=int,
                                  help="input image height",
-                                 default=896)
+                                 default=320)
         self.parser.add_argument("--width",
                                  type=int,
                                  help="input image width",
-                                 default=1600)
+                                 default=800)
         self.parser.add_argument("--disparity_smoothness",
                                  type=float,
                                  help="disparity smoothness weight",
@@ -282,7 +282,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--batch_size",
                                  type=int,
                                  help="batch size",
-                                 default=1)
+                                 default=8)
         self.parser.add_argument("--learning_rate",
                                  type=float,
                                  help="learning rate",
@@ -290,7 +290,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--num_epochs",
                                  type=int,
                                  help="number of epochs",
-                                 default=20)
+                                 default=100)
         self.parser.add_argument("--scheduler_step_size",
                                  type=int,
                                  help="step size of the scheduler",
@@ -335,7 +335,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--num_workers",
                                  type=int,
                                  help="number of dataloader workers",
-                                 default=1)
+                                 default=4)
 
         # LOADING options
         self.parser.add_argument("--load_weights_folder",

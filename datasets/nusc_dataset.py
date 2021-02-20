@@ -245,19 +245,25 @@ class NuscDataset(data.Dataset):
             color_path = self.nusc.get('sample_data', token=sample['data'][self.sensor])['filename']
             full_color_path = os.path.join(self.data_root, color_path)
             color = self.loader(full_color_path)
-            color = color.crop((0,2,1600,898))
+            # color = color.crop((0,2,1600,898))
+            color = color.crop((0,240,1600,880))
+
         elif i == -1:
             prev_sample = self.nusc.get('sample', token=sample['prev'])
             color_path = self.nusc.get('sample_data', token=prev_sample['data'][self.sensor])['filename']
             full_color_path = os.path.join(self.data_root, color_path)
             color = self.loader(full_color_path)
-            color = color.crop((0,2,1600,898))
+            # color = color.crop((0,2,1600,898))
+            color = color.crop((0,240,1600,880))
+
         if i == 1:
             next_sample = self.nusc.get('sample', token=sample['next'])
             color_path = self.nusc.get('sample_data', token=next_sample['data'][self.sensor])['filename']
             full_color_path = os.path.join(self.data_root, color_path)
             color = self.loader(full_color_path)
-            color = color.crop((0,2,1600,898))
+            # color = color.crop((0,2,1600,898))
+            color = color.crop((0,240,1600,880))
+
 
         if do_flip:
             color = color.transpose(pil.FLIP_LEFT_RIGHT)
@@ -278,8 +284,11 @@ class NuscDataset(data.Dataset):
         # apply maxpool on nusc depth gt to make the lidar point denser
         depth_gt = max_pool2d(torch.from_numpy(depth_gt).unsqueeze(dim=0), kernel_size=3, stride=1, padding=1)
         depth_gt = depth_gt.squeeze(0).numpy()
+
         # we crop nuscenes depth_gt to match the orinigal color image shape
-        depth_gt = depth_gt[:,2:898]
+        # depth_gt = depth_gt[:,2:898]
+        depth_gt = depth_gt[:,240:880]
+
         if do_flip:
             depth_gt = np.fliplr(depth_gt)
 

@@ -554,7 +554,11 @@ class Trainer:
         """
         depth_pred = outputs[("depth", 0, 0)]
         depth_pred = torch.clamp(F.interpolate(
-            depth_pred, [896, 1600], mode="bilinear", align_corners=False), 1e-3, 80)
+            depth_pred, [640, 1600], mode="bilinear", align_corners=False), 1e-3, 80)
+        # crop_mask = torch.zeros_like(mask)
+        # # for nusc dataset, lidar depth map has already been cropped
+        # crop_mask[:, :, 153:371, 44:1197] = 1
+        # mask = mask * crop_mask
 
         # depth_pred = torch.clamp(F.interpolate(
         #     depth_pred, [375,1242], mode="bilinear", align_corners=False), 1e-3, 80)
@@ -569,10 +573,10 @@ class Trainer:
         mask = depth_gt > 0
 
         # garg/eigen crop
-        # crop_mask = torch.zeros_like(mask)
-        # # for nusc dataset, lidar depth map has already been cropped
-        # crop_mask[:, :, 153:371, 44:1197] = 1
-        # mask = mask * crop_mask
+        crop_mask = torch.zeros_like(mask)
+        # for nusc dataset, lidar depth map has already been cropped
+        crop_mask[:, :, 160:600, 160:1440] = 1
+        mask = mask * crop_mask
 
         depth_gt = depth_gt[mask]
         depth_pred = depth_pred[mask]

@@ -183,7 +183,27 @@ class NuscDataset(data.Dataset):
             # for inp in inputs:
             #     if 'color' in inp:
             #         inputs[inp].save('/home/user/xwh/monodepth2-master/dataset_check/{}.png'.format(str(index)+'_'+str(i)))
+        prev_sample = self.nusc.get('sample', token=sample['prev'])
+        next_sample = self.nusc.get('sample', token=sample['next'])
+        inputs[("pose_gt", -1, 0)] = self.get_poses(prev_sample, sample).astype(float)
+        inputs[("pose_gt", 0, 1)] = self.get_poses(sample, next_sample).astype(float)
+        inputs[("pose_gt", 0, -1)] = self.get_poses(sample, prev_sample).astype(float)
+        #
+        # inputs[("pose_gt", -1, 0)][[1,2],:] = inputs[("pose_gt", -1, 0)][[2,1],:]
+        # inputs[("pose_gt", 0, 1)][[1,2],:] = inputs[("pose_gt", 0, 1)][[2,1],:]
+        # inputs[("pose_gt", 0, -1)][[1,2],:] = inputs[("pose_gt", 0, -1)][[2,1],:]
 
+        inputs[("pose_gt", -1, 0)][0,3]  = inputs[("pose_gt", -1, 0)][0,3]/1600
+        inputs[("pose_gt", -1, 0)][1,3] = inputs[("pose_gt", -1, 0)][1, 3] /900
+        inputs[("pose_gt", -1, 0)][2,3] = inputs[("pose_gt", -1, 0)][2, 3] /80
+
+        inputs[("pose_gt", 0, 1)][0,3]  = inputs[("pose_gt", 0, 1)][0,3]/1600
+        inputs[("pose_gt", 0, 1)][1,3] = inputs[("pose_gt", 0, 1)][1, 3] /900
+        inputs[("pose_gt", 0, 1)][2,3] = inputs[("pose_gt", 0, 1)][2, 3] /80
+
+        inputs[("pose_gt", 0, -1)][0,3]  = inputs[("pose_gt", 0, -1)][0,3]/1600
+        inputs[("pose_gt", 0, -1)][1,3] = inputs[("pose_gt", 0, -1)][1, 3] /900
+        inputs[("pose_gt", 0, -1)][2,3] = inputs[("pose_gt", 0, -1)][2, 3] /80
 
         # adjusting intrinsics to match each scale in the pyramid
         SENSOR_DATA = self.nusc.get('sample_data', sample['data'][self.sensor])
@@ -272,10 +292,38 @@ class NuscDataset(data.Dataset):
 
         return color
 
-    # def get_relative_pose(self, current_sample, next_sample):
-
     def check_depth(self):
         return True
+
+    def get_poses(self, current_sample, next_sample):
+
+        current_sample_data = self.nusc.get('sample_data', current_sample['data'][self.sensor])
+        next_sample_data = self.nusc.get('sample_data', next_sample['data'][self.sensor])
+
+        EGO_current_token = current_sample_data['ego_pose_token']
+        EGO_current = self.nusc.get('ego_pose',token=EGO_current_token)
+
+        EGO_next_token = next_sample_data['ego_pose_token']
+        EGO_next = self.nusc.get('ego_pose',token=EGO_next_token)
+
+        # H_pose_current = np.zeros((4, 4))
+        # H_pose_next = np.zeros((4, 4))
+        # H_pose_current[3, 3] = 1
+        # H_pose_next[3, 3] = 1
+        # pose1_rot = Quaternion(EGO_current['rotation']).rotation_matrix
+        # pose1_tran = EGO_current['translation']
+        # H_pose_current[0:3, 0:3] = pose1_rot
+        # H_pose_current[0:3, 3] = pose1_tran
+        #
+        # pose2_rot = Quaternion(EGO_next['rotation']).rotation_matrix
+        # pose2_tran = EGO_next['translation']
+        # H_pose_next[0:3, 0:3] = pose2_rot
+        # H_pose_next[0:3, 3] = pose2_tran
+
+        H_current_to_next = self.get_relative_pose(EGO_current, EGO_next)
+
+        return H_current_to_next
+
 
     def get_depth(self, nusc, sample, do_flip):
         pointsensor_token = sample['data']['LIDAR_TOP']
@@ -307,16 +355,23 @@ class NuscDataset(data.Dataset):
         :param to_pose:
         :return:
         """
-        relative_pose_matrix = np.ones((4,4))
-        pose1_rot = pose1[0:3,0:3]
-        pose1_tran = pose1[3,0:3]
-        pose2_rot =  pose1[0:3,0:3]
-        pose2_tran = pose2[3,0:3]
-        pose_1_inv = np.linalg.inv(pose1_rot)
-        rot_pose1_to_pose2 = np.dot(pose_1_inv, pose2_rot)
-        tran_pose1_to_pose2 = pose2_tran-pose1_tran
-        relative_pose_matrix[0:3,0:3] = rot_pose1_to_pose2
-        relative_pose_matrix[3,0:3] = tran_pose1_to_pose2
+        H_pose1 = np.zeros((4, 4))
+        H_pose2 = np.zeros((4, 4))
+        H_pose1[3, 3] = 1
+        H_pose2[3, 3] = 1
+
+        pose1_rot = Quaternion(pose1['rotation']).rotation_matrix
+        pose1_tran = pose1['translation']
+        H_pose1[0:3, 0:3] = pose1_rot
+        H_pose1[0:3, 3] = pose1_tran
+
+        pose2_rot = Quaternion(pose2['rotation']).rotation_matrix
+        pose2_tran = pose2['translation']
+        H_pose2[0:3, 0:3] = pose2_rot
+        H_pose2[0:3, 3] = pose2_tran
+
+        H_pose1_inv = np.linalg.inv(H_pose1)
+        relative_pose_matrix = np.dot(H_pose1_inv, H_pose2)
         return relative_pose_matrix
 
 
@@ -412,3 +467,7 @@ class NuscDataset(data.Dataset):
         coloring = coloring[mask]
 
         return points, coloring, im
+
+
+if __name__ == '__main__':
+    dataset = NuscDataset()

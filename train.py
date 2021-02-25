@@ -8,7 +8,8 @@ from __future__ import absolute_import, division, print_function
 
 from trainer import Trainer
 from options import MonodepthOptions, NuscdepthOptions
-
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = str(1)
 options = NuscdepthOptions()
 opts = options.parse()
 

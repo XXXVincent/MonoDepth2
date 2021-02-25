@@ -117,6 +117,99 @@ lidar_token = first_token_meta['data']['LIDAR_TOP']
 camera_token = first_token_meta['data']['CAM_FRONT']
 pts, depth, img = map_pointcloud_to_image(nusc, lidar_token, camera_token)
 print("X")
+
+def get_relative_pose(pose1, pose2):
+    """
+    calculate relative from pose1 to pose2 in the global frame
+    :param from_pose:
+    :param to_pose:
+    :return:
+    """
+    H_pose1 = np.zeros((4, 4))
+    H_pose2 = np.zeros((4, 4))
+    H_pose1[3,3] = 1
+    H_pose2[3, 3] = 1
+
+    pose1_rot = Quaternion(pose1['rotation']).rotation_matrix
+    pose1_tran = pose1['translation']
+    H_pose1[0:3,0:3] = pose1_rot
+    H_pose1[0:3,3] = pose1_tran
+
+
+
+    pose2_rot = Quaternion(pose2['rotation']).rotation_matrix
+    pose2_tran = pose2['translation']
+    H_pose2[0:3,0:3] = pose2_rot
+    H_pose2[0:3,3] = pose2_tran
+
+    H_pose1_inv = np.linalg.inv(H_pose1)
+    relative_pose_matrix = np.dot(H_pose1_inv, H_pose2)
+    return relative_pose_matrix
+    #
+    # pose_1_inv = np.linalg.inv(pose1_rot)
+    # rot_pose1_to_pose2 = np.dot(pose_1_inv, pose2_rot)
+    # tran_pose1_to_pose2 = np.array(pose2_tran) - np.array(pose1_tran)
+    # relative_pose_matrix[0:3, 0:3] = rot_pose1_to_pose2
+    # relative_pose_matrix[3, 0:3] = tran_pose1_to_pose2
+    # relative_pose_matrix[3,3] = 1
+    # return relative_pose_matrix
+
+CAM_SAMPLE = nusc.get('sample_data', first_token_meta['data'][sensor])
+CAM_EGO= CAM_SAMPLE['ego_pose_token']
+EGO = nusc.get('ego_pose',token=CAM_EGO)
+
+CAM_SAMPLE_next_token = first_token_meta['next']
+next_sample = nusc.get('sample', token=CAM_SAMPLE_next_token)
+CAM_SAMPLE_next = nusc.get('sample_data', token=next_sample['data'][sensor])
+CAM_EGO_next= CAM_SAMPLE_next['ego_pose_token']
+EGO_next = nusc.get('ego_pose',token=CAM_EGO_next)
+
+current_to_next = get_relative_pose(EGO,EGO_next)
+
+H_pose1 = np.zeros((4, 4))
+H_pose2 = np.zeros((4, 4))
+H_pose1[3, 3] = 1
+H_pose2[3, 3] = 1
+pose1_rot = Quaternion(EGO['rotation']).rotation_matrix
+pose1_tran = EGO['translation']
+H_pose1[0:3, 0:3] = pose1_rot
+H_pose1[0:3,3] = pose1_tran
+
+pose2_rot = Quaternion(EGO_next['rotation']).rotation_matrix
+pose2_tran = EGO_next['translation']
+H_pose2[0:3, 0:3] = pose2_rot
+H_pose2[0:3,3] = pose2_tran
+
+H2_recovered = np.dot(H_pose1, current_to_next)
+
+
+
+pose1_rot = Quaternion(pose1['rotation']).rotation_matrix
+pose1_tran = pose1['translation']
+H_pose1[0:3, 0:3] = pose1_rot
+H_pose1[:, 3] = pose1_tran
+
+
+
+pose2_rot = Quaternion(EGO_next['rotation']).rotation_matrix
+recovered = np.dot(pose2_rot,current_to_next[0:3,0:3].T)
+pose1_rot = Quaternion(EGO['rotation']).rotation_matrix
+recovered_pose1_rot= list(Quaternion(matrix=recovered))
+
+
+H1_global = np.zeros((4,4))
+H1_global[0:3,0:3] = pose1_rot
+H1_global[3,0:3] = EGO['translation']
+H1_global[3,3] = 1
+
+
+H2_global = np.zeros((4,4))
+H2_global[0:3,0:3] = pose2_rot
+H2_global[3,0:3] = EGO_next['translation']
+H2_global[3,3] = 1
+
+recovered_H1 = np.dot(H2_global,current_to_next.T)
+
 # pt[0] horizontal index, < im.size[0]
 # pt[1] vertical index, < im.size[1]
 # depth, depth of the pcs

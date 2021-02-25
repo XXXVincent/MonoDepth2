@@ -87,7 +87,7 @@ class MonodepthOptions:
         self.parser.add_argument("--batch_size",
                                  type=int,
                                  help="batch size",
-                                 default=1)
+                                 default=16)
         self.parser.add_argument("--learning_rate",
                                  type=float,
                                  help="learning rate",
@@ -219,7 +219,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--log_dir",
                                  type=str,
                                  help="log directory",
-                                 default='./exp/')
+                                 default='./exp')
 
         # TRAINING options
         self.parser.add_argument("--model_name",
@@ -234,12 +234,12 @@ class NuscdepthOptions:
         self.parser.add_argument("--num_layers",
                                  type=int,
                                  help="number of resnet layers",
-                                 default=18,
+                                 default=50,
                                  choices=[18, 34, 50, 101, 152])
         self.parser.add_argument("--dataset",
                                  type=str,
                                  help="dataset to train on",
-                                 default="nusc_dataset",
+                                 default="nusc_dataset_with_pose_gt",
                                  choices=["kitti", "kitti_odom", "kitti_depth", "kitti_test", "nusc_dataset"])
         self.parser.add_argument("--png",
                                  help="if set, trains from raw KITTI png files (instead of jpgs)",
@@ -247,11 +247,11 @@ class NuscdepthOptions:
         self.parser.add_argument("--height",
                                  type=int,
                                  help="input image height",
-                                 default=320)
+                                 default=160)
         self.parser.add_argument("--width",
                                  type=int,
                                  help="input image width",
-                                 default=800)
+                                 default=416)
         self.parser.add_argument("--disparity_smoothness",
                                  type=float,
                                  help="disparity smoothness weight",
@@ -268,7 +268,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--max_depth",
                                  type=float,
                                  help="maximum depth",
-                                 default=100.0)
+                                 default=80.0)
         self.parser.add_argument("--use_stereo",
                                  help="if set, uses stereo pair for training",
                                  action="store_true")
@@ -282,11 +282,11 @@ class NuscdepthOptions:
         self.parser.add_argument("--batch_size",
                                  type=int,
                                  help="batch size",
-                                 default=8)
+                                 default=16)
         self.parser.add_argument("--learning_rate",
                                  type=float,
                                  help="learning rate",
-                                 default=1e-4)
+                                 default=1e-6)
         self.parser.add_argument("--num_epochs",
                                  type=int,
                                  help="number of epochs",
@@ -294,7 +294,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--scheduler_step_size",
                                  type=int,
                                  help="step size of the scheduler",
-                                 default=15)
+                                 default=50)
 
         # ABLATION options
         self.parser.add_argument("--v1_multiscale",
@@ -351,7 +351,7 @@ class NuscdepthOptions:
         self.parser.add_argument("--log_frequency",
                                  type=int,
                                  help="number of batches between each tensorboard log",
-                                 default=250)
+                                 default=500)
         self.parser.add_argument("--save_frequency",
                                  type=int,
                                  help="number of epochs between each save",

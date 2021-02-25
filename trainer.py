@@ -113,7 +113,8 @@ class Trainer:
         # data
         datasets_dict = {"kitti": datasets.KITTIRAWDataset,
                          "kitti_odom": datasets.KITTIOdomDataset,
-                         "nusc_dataset": datasets.NuscDataset}
+                         "nusc_dataset": datasets.NuscDataset,
+                         "nusc_dataset_with_pose_gt": datasets.NuscDataset_with_pose_gt}
         # self.opt.dataset = "nusc_dataset"
         self.dataset = datasets_dict[self.opt.dataset]
 
@@ -289,33 +290,58 @@ class Trainer:
             # In this setting, we compute the pose to each source frame via a
             # separate forward pass through the pose network.
 
+            #####################################################
+            ########### Orinigal pose prediction code ###########
+            #####################################################
+
             # select what features the pose network takes as input
-            if self.opt.pose_model_type == "shared":
-                pose_feats = {f_i: features[f_i] for f_i in self.opt.frame_ids}
-            else:
-                pose_feats = {f_i: inputs["color_aug", f_i, 0] for f_i in self.opt.frame_ids}
+            # if self.opt.pose_model_type == "shared":
+            #     pose_feats = {f_i: features[f_i] for f_i in self.opt.frame_ids}
+            # else:
+            #     pose_feats = {f_i: inputs["color_aug", f_i, 0] for f_i in self.opt.frame_ids}
+            #
+            # for f_i in self.opt.frame_ids[1:]:
+            #     if f_i != "s":
+            #         # To maintain ordering we always pass frames in temporal order
+            #         if f_i < 0:
+            #             pose_inputs = [pose_feats[f_i], pose_feats[0]]
+            #         else:
+            #             pose_inputs = [pose_feats[0], pose_feats[f_i]]
+            #
+            #         if self.opt.pose_model_type == "separate_resnet":
+            #             pose_inputs = [self.models["pose_encoder"](torch.cat(pose_inputs, 1))]
+            #         elif self.opt.pose_model_type == "posecnn":
+            #             pose_inputs = torch.cat(pose_inputs, 1)
+            #
+            #         axisangle, translation = self.models["pose"](pose_inputs)
+            #         outputs[("axisangle", 0, f_i)] = axisangle
+            #         outputs[("translation", 0, f_i)] = translation
+            #
+            #         # Invert the matrix if the frame id is negative
+            #         outputs[("cam_T_cam", 0, f_i)] = transformation_from_parameters(
+            #             axisangle[:, 0], translation[:, 0], invert=(f_i < 0))
 
+            #####################################################
+            ########### Orinigal pose prediction code ###########
+            #####################################################
+
+            #####################################################
+            ########### Nusc gt pose code ###########
+            #####################################################
             for f_i in self.opt.frame_ids[1:]:
-                if f_i != "s":
-                    # To maintain ordering we always pass frames in temporal order
-                    if f_i < 0:
-                        pose_inputs = [pose_feats[f_i], pose_feats[0]]
-                    else:
-                        pose_inputs = [pose_feats[0], pose_feats[f_i]]
+                # H_relative_pose = inputs[("pose_gt", -1, 0)]
+                # outputs[("axisangle", 0, f_i)] = H_relative_pose[0:3,0:3]
+                # outputs[("translation", 0, f_i)] = H_relative_pose[0:3,3]
+                # outputs[("cam_T_cam", 0, f_i)] = transformation_from_parameters(
+                #     H_relative_pose[0:3,0:3][:, 0], H_relative_pose[0:3,3][:, 0], invert=(f_i < 0))
+                if f_i < 0:
+                    outputs[("cam_T_cam", 0, f_i)] = inputs[("pose_gt", 0, -1)].type(torch.float32)
+                else:
+                    outputs[("cam_T_cam", 0, f_i)] = inputs[("pose_gt", 0, 1)].type(torch.float32)
 
-                    if self.opt.pose_model_type == "separate_resnet":
-                        pose_inputs = [self.models["pose_encoder"](torch.cat(pose_inputs, 1))]
-                    elif self.opt.pose_model_type == "posecnn":
-                        pose_inputs = torch.cat(pose_inputs, 1)
-
-                    axisangle, translation = self.models["pose"](pose_inputs)
-                    outputs[("axisangle", 0, f_i)] = axisangle
-                    outputs[("translation", 0, f_i)] = translation
-
-                    # Invert the matrix if the frame id is negative
-                    outputs[("cam_T_cam", 0, f_i)] = transformation_from_parameters(
-                        axisangle[:, 0], translation[:, 0], invert=(f_i < 0))
-
+            #####################################################
+            ########### Nusc gt pose code ###########
+            #####################################################
         else:
             # Here we input all frames to the pose net (and predict all poses) together
             if self.opt.pose_model_type in ["separate_resnet", "posecnn"]:
